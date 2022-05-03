@@ -2,6 +2,8 @@
 NGS Analysis Code
 =================
 
+This code use used for analyzing High Throughput Sequencing (HTS) data, here referred to as Next-Gen Sequencing (NGS) data.
+
 To run/use this code:
 
 - python3 is required
