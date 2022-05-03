@@ -30,3 +30,12 @@ $ git checkout segments
 ```
 $ $NGS_HOME/bin/analysis.sh
 ```
+
+
+Barcode Analysis Code
+=====================
+
+- similar setup/execution to NGS, but add "barcode":
+```
+$ $NGS_HOME/bin/analysis.sh barcode
+```

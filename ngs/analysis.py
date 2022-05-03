@@ -1,9 +1,9 @@
 
+from segments.runner import Runner
 from segments.util import fs, jsonAtPath, writeCsvToPath
 
 from . import model as M
 from .experiment import NGSExperiment
-from .run import NGSRunner
 
 
 
@@ -20,7 +20,7 @@ class NGSAnalysis(object):
         return res
 
     def run(self):
-        NGSRunner(self.experiment, self.keys).runAll()
+        Runner(self.experiment, self.keys).runAll()
         self.analysis()
 
     def counts(self, key):

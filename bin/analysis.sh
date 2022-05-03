@@ -10,4 +10,9 @@ if [ "" == "${SPATS_HOME}" ]; then
     exit -1
 fi
 
-PYTHONPATH="${NGS_HOME}:${SPATS_HOME}" python3 -m ngs
+NGS_MODULE="$1"
+if [ "${NGS_MODULE}" == "" ]; then
+   NGS_MODULE="ngs"
+fi
+
+PYTHONPATH="${NGS_HOME}:${SPATS_HOME}" python3 -m ${NGS_MODULE}
