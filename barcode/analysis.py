@@ -101,6 +101,8 @@ class BarcodeAnalysis(object):
 
         rows.append([ "barcodes: " ] + [ "" for x in rows[0][1:] ])
         bccs = [ s.get('barcode', {}) for s in splits ]
+        rows.append([ 'distinctBarcodes' ] + [ len(bcc) for bcc in bccs ])
+        rows.append([ "" for x in rows[0] ])
         known = self.experiment.knownBarcodes
 
         nearbyDistance = 3
@@ -138,9 +140,11 @@ class BarcodeAnalysis(object):
         for kb in known:
             _do(kb, pcts = matched, vals = bccs)
             _do(desc = "  +/- {}".format(nearbyDistance), pcts = matched, vals = nearbys, key = kb)
+            rows.append([ "" for x in rows[0] ])
 
         ocs = [ { "other" : sum(x.values()) } for x in others ]
         _do("other", pcts = matched, vals = ocs)
+        rows.append([ "" for x in rows[0] ])
         rows.append([ "" for x in rows[0] ])
 
         rows.append([ "categories: " ] + [ "" for x in rows[0][1:] ])
