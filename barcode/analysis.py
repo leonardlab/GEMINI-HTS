@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from segments.util import fs, jsonAtPath, movePath, writeCsvToPath
+from segments.util import fs, jsonAtPath, movePath, string_edit_distance, writeCsvToPath
 from segments.runner import Runner
 
 from .experiment import BarcodeExperiment
@@ -100,12 +100,47 @@ class BarcodeAnalysis(object):
         rows.append([ "" for x in rows[0] ])
 
         rows.append([ "barcodes: " ] + [ "" for x in rows[0][1:] ])
-        bcs = [ s.get('barcode', {}) for s in splits ]
+        bccs = [ s.get('barcode', {}) for s in splits ]
         known = self.experiment.knownBarcodes
+
+        nearbyDistance = 3
+        nearbys = []
+        others = []
+        allBarcodes = set()
+        cache = {}
+        count = 1
+        for bcc in bccs:
+            print("Processing {} s{} barcodes...".format(len(bcc), count))
+            count += 1
+            nearby = {}
+            other = {}
+            for bc in list(bcc.keys()):
+                allBarcodes.add(bc)
+                if bc in known:
+                    continue
+                near = None
+                if bc in cache:
+                    near = cache[bc]
+                else:
+                    if bcc[bc] > 50: # heuristic to speedup
+                        for kbc in known:
+                            if string_edit_distance(bc, kbc, substitution_cost = 1, insert_delete_cost = 1)[0] <= nearbyDistance:
+                                near = kbc
+                                break
+                    cache[bc] = near
+                if near:
+                    nearby[near] = nearby.get(near, 0) + bcc[bc]
+                else:
+                    other[bc] = bcc[bc]
+            others.append(other)
+            nearbys.append(nearby)
+
         for kb in known:
-            _do(kb, pcts = matched, vals = bcs)
-        lens = [ { "unknown" : len([bck for bck in bc.keys() if bck not in known]) } for bc in bcs ]
-        _do("unknown", pcts = matched, vals = lens)
+            _do(kb, pcts = matched, vals = bccs)
+            _do(desc = "  +/- {}".format(nearbyDistance), pcts = matched, vals = nearbys, key = kb)
+
+        ocs = [ { "other" : sum(x.values()) } for x in others ]
+        _do("other", pcts = matched, vals = ocs)
         rows.append([ "" for x in rows[0] ])
 
         rows.append([ "categories: " ] + [ "" for x in rows[0][1:] ])
@@ -121,6 +156,17 @@ class BarcodeAnalysis(object):
 
         writeCsvToPath(rows, "sample_counts.csv")
         print("Wrote results to sample_counts.csv")
+
+        rows = rows[:1]
+
+        rows.append([ "" for x in rows[0] ])
+        allBarcodes = sorted(allBarcodes, reverse = True, key = lambda x : sum([bc.get(x, 0) for bc in bccs ]))
+        for bc in allBarcodes:
+            _do(bc, vals = bccs)
+
+        rows.append([ "" for x in rows[0] ])
+        writeCsvToPath(rows, "all_barcodes.csv")
+        print("Wrote all_barcodes.csv")
 
 
     def debug(self):
