@@ -12,15 +12,20 @@ class BarcodeAnalysis(object):
     def __init__(self, debug = False):
         self._debug = debug
         self.experiment = BarcodeExperiment()
+        self._samples = 16
         self.keys = self.experimentKeys()
 
     def experimentKeys(self):
         short65k = self._debug
-        self._samples = 8
         res = [ "s{}_{}".format(i + 1, "65k" if int(short65k) else "full") for i in range(self._samples) ]
         if short65k:
             res = [ res[0], res[2], res[4] ]
         return res
+
+    def sampleFromOriginalName(self, name):
+        bits = name.split('_')
+        assert(bits[0] == 'DMS')
+        return int(bits[1])
 
     def prepFastq(self):
         if os.path.exists('s{}_full_R2.fastq'.format(self._samples)):
@@ -28,10 +33,8 @@ class BarcodeAnalysis(object):
         for item in os.listdir('.'):
             if not item.endswith('.fastq.gz'):
                 continue
-            if not item.startswith('00'):
-                continue
-            sample = int(item[:3])
-            assert(sample >=0  and  sample <= 8)
+            sample = self.sampleFromOriginalName(item)
+            assert((sample >= 1)  and  (sample <= self._samples))
             if '_R1_' in item:
                 movePath(item, 's{}_full_R1.fastq.gz'.format(sample))
             else:
@@ -176,6 +179,8 @@ class BarcodeAnalysis(object):
     def debug(self):
         Runner(self.experiment, self.keys).runSingle(diagram = True, allDiagrams = False)
 
+    def show(self, key, sequenceId):
+        Runner(self.experiment, self.keys).show(key, sequenceId)
 
 def pctfmt(x, base):
     return "{:.2f}%".format(100.*x/base) if base else "--"
@@ -183,3 +188,5 @@ def pctfmt(x, base):
 def main():
     ba = BarcodeAnalysis(debug = False)
     ba.run()
+    #ba.show("s7_full", 1310)
+    #ba.analysis()
