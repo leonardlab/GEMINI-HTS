@@ -12,7 +12,7 @@ class BarcodeAnalysis(object):
     def __init__(self, debug = False):
         self._debug = debug
         self.experiment = BarcodeExperiment()
-        self._samples = 16
+        self._samples = 9
         self.keys = self.experimentKeys()
 
     def experimentKeys(self):
@@ -24,14 +24,22 @@ class BarcodeAnalysis(object):
 
     def sampleFromOriginalName(self, name):
         bits = name.split('_')
-        assert(bits[0] == 'DMS')
+        if 1:
+            bits = bits[0].split('-')
+            assert(bits[0] == 'DMS')
+        else:
+            assert(bits[0] == 'DMS')
         return int(bits[1])
 
     def prepFastq(self):
         if os.path.exists('s{}_full_R2.fastq'.format(self._samples)):
             return
+        if os.path.exists('s{}_full_r2.fastq'.format(self._samples)):
+            return
         for item in os.listdir('.'):
             if not item.endswith('.fastq.gz'):
+                continue
+            if '_full_' in item:
                 continue
             sample = self.sampleFromOriginalName(item)
             assert((sample >= 1)  and  (sample <= self._samples))
@@ -54,10 +62,21 @@ class BarcodeAnalysis(object):
                 subprocess.check_call([ "./shortify.sh", f"s{sample}" ])
             assert(os.path.exists(short))
 
+    def fixCase(self):
+        for sample in range(1, self._samples + 1):
+            for r in range(1, 3):
+                f = 's{}_full_r{}.fastq'.format(sample, r)
+                if not os.path.exists(f):
+                    uc = 's{}_full_R{}.fastq'.format(sample, r)
+                    assert(os.path.exists(uc))
+                    subprocess.check_call([ 'mv', uc, f ])
+                assert(os.path.exists(f))
+        
     def run(self):
         if self._debug:
             return self.debug()
         self.prepFastq()
+        self.fixCase()
         Runner(self.experiment, self.keys).runAll()
         self.analysis()
 
@@ -189,4 +208,4 @@ def main():
     ba = BarcodeAnalysis(debug = False)
     ba.run()
     #ba.show("s7_full", 1310)
-    #ba.analysis()
+    ba.analysis()

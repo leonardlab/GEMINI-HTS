@@ -2,6 +2,9 @@
 from segments.descriptor import Descriptor, M
 
 
+# 2022_07_30: sequences added to both fp/rp
+# 2022_08_29: fp and rp extended by 4 nt on each side, looks like fp has a toggle change
+
 class BarcodeDescriptor(Descriptor):
 
     def __init__(self):
@@ -9,8 +12,14 @@ class BarcodeDescriptor(Descriptor):
         self.maxAllowedErrors = 4
         self.handleIndels = False
         self.barcodeLen = 20
-        self.fp = "TCCGTCACGCCAATCATAGG"
-        self.rp = "GAAACGGTATTCGCACACGAGA"
+        #fp = "TTTTTTAATGATACGGCGACCACCGAGATCTACACTCTTTCCCTACACGACGCTCTTCCGATCT"
+        fp  = "TTTTTTAATGATACGGCGACCACCGAGATATACACTCTTTCCCTACACGACGCTCTTCCGATCT"
+        self.fp = fp + "TCCGTCACGCCAATCATAGG"
+        self.fp = "TTTT" + self.fp
+        #rp = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCACATTTCTATCTCGTATGCCGTCTTCTGCTTG"
+        rp = "AGATCGGAAGAGCACACGTCTGAACTCCAGTCACATCACGATCTCGTATGCCGTCTTCTGCTTG"
+        rp = rp + "AAAA"
+        self.rp = "GAAACGGTATTCGCACACGAGA" + rp
         self.left = "AACTGCACGCGT"
         self.right = "GAGCTCTACTGT"
 
